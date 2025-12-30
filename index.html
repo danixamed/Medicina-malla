@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Malla Medicina UCSUR 2025</title>
+
+<style>
+:root{
+  --rosa-fondo:#fff1f2;
+  --rosa-card:#fce7f3;
+  --rosa-ok:#fbcfe8;
+  --morado:#9333ea;
+  --morado-borde:#e9d5ff;
+  --gris:#e5e7eb;
+}
+body{
+  font-family: Arial, sans-serif;
+  background: var(--rosa-fondo);
+  padding: 20px;
+}
+h1{
+  text-align:center;
+  color: var(--morado);
+}
+.grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
+  gap:15px;
+}
+.ciclo{
+  background: var(--rosa-card);
+  border: 2px solid var(--morado-borde);
+  border-radius: 12px;
+  padding:10px;
+}
+.ciclo h2{
+  text-align:center;
+  color: var(--morado);
+}
+.curso{
+  background:white;
+  border:1px solid #ddd;
+  border-radius:8px;
+  padding:6px 8px;
+  margin:4px 0;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.curso.locked{
+  background: var(--gris);
+  color:#9ca3af;
+  cursor:not-allowed;
+}
+.curso.completed{
+  background: var(--rosa-ok);
+  text-decoration: line-through;
+}
+.creditos{
+  font-size: 12px;
+  color: var(--morado);
+}
+#progreso{
+  margin-top:20px;
+  text-align:center;
+  font-weight:bold;
+  color: var(--morado);
+}
+</style>
+</head>
+
+<body>
+
+<h1>Malla Curricular Medicina UCSUR 2025</h1>
+<div class="grid" id="contenedor"></div>
+<div id="progreso"></div>
+
+<script>
+const cursos = {
+
+"Ciclo 1":{
+ "Química":{creditos:5, prereq:[]},
+ "Matemática":{creditos:3, prereq:[]},
+ "Lengua y Oratoria":{creditos:3, prereq:[]},
+ "Introducción a la Medicina":{creditos:2, prereq:[]},
+ "Desempeño Universitario":{creditos:2, prereq:[]},
+ "Biología Celular y Molecular":{creditos:6, prereq:[]}
+},
+
+"Ciclo 2":{
+ "Redacción General":{creditos:3, prereq:["Lengua y Oratoria"]},
+ "Realidad Nacional":{creditos:2, prereq:[]},
+ "Morfofisiología I":{creditos:6, prereq:["Biología Celular y Molecular"]},
+ "Introducción a la Investigación":{creditos:3, prereq:["Introducción a la Medicina"]},
+ "Bioquímica":{creditos:5, prereq:["Química"]},
+ "Anatomía General":{creditos:3, prereq:["Biología Celular y Molecular"]}
+},
+
+"Ciclo 3":{
+ "Morfofisiología II":{creditos:7, prereq:["Morfofisiología I","Anatomía General"]},
+ "Inmunología":{creditos:3, prereq:["Morfofisiología I","Bioquímica"]},
+ "Genética Médica":{creditos:3, prereq:["Biología Celular y Molecular"]},
+ "Filosofía":{creditos:3, prereq:[]},
+ "Estadística General":{creditos:4, prereq:["Matemática"]},
+ "Educación Ambiental":{creditos:2, prereq:["Desempeño Universitario"]}
+},
+
+"Ciclo 4":{
+ "Morfofisiología III":{creditos:7, prereq:["Morfofisiología II"]},
+ "Infectología Básica":{creditos:5, prereq:["Inmunología"]},
+ "Fisiopatología I":{creditos:4, prereq:["Morfofisiología II","Inmunología"]},
+ "Desarrollo y Crecimiento":{creditos:3, prereq:["Biología Celular y Molecular"]},
+ "Bioética":{creditos:2, prereq:["Introducción a la Medicina","Filosofía"]}
+}
+
+};
+
+const estado = JSON.parse(localStorage.getItem("malla2025") || "{}");
+
+function guardar(){
+  localStorage.setItem("malla2025", JSON.stringify(estado));
+}
+
+function render(){
+  const cont = document.getElementById("contenedor");
+  cont.innerHTML = "";
+  let total = 0;
+  let completos = 0;
+
+  for(const ciclo in cursos){
+    const box = document.createElement("div");
+    box.className = "ciclo";
+    box.innerHTML = `<h2>${ciclo}</h2>`;
+
+    for(const curso in cursos[ciclo]){
+      total++;
+      const {creditos, prereq} = cursos[ciclo][curso];
+      const habilitado = prereq.every(p => estado[p]);
+
+      const div = document.createElement("div");
+      div.className = "curso";
+      div.innerHTML = `<span>${curso}</span><span class="creditos">${creditos} cr</span>`;
+
+      if(!habilitado) div.classList.add("locked");
+      if(estado[curso]){
+        div.classList.add("completed");
+        completos++;
+      }
+
+      if(habilitado){
+        div.onclick = () => {
+          estado[curso] = !estado[curso];
+          guardar();
+          render();
+        };
+      }
+
+      box.appendChild(div);
+    }
+
+    cont.appendChild(box);
+  }
+
+  document.getElementById("progreso").textContent =
+    `Progreso: ${Math.round((completos/total)*100)}%`;
+}
+
+render();
+</script>
+
+</body>
+</html>
